@@ -74,19 +74,13 @@ AVERAGEX(
         'RCPA Data Table'[Product Name]
     )
 )
-Use code with caution.
 Dax
 3. Doctor Conversion Status (Calculated Column & Measure)
 This was the most complex calculation.
 A calculated column was first created to check, on a row-by-row basis, if an RCPA marked the 3rd consecutive time a doctor met their target.
 A final measure ([Final Conversion Status]) was then built to find the most recent status for each doctor, providing a clean and accurate summary for the final visual.
-Visualizations
+**Visualizations**
 The final report consists of three main visuals designed to answer the key business questions:
 Doctor Rx Performance vs. Target: A line and clustered column chart showing each doctor's total prescriptions against their specific target, with slicers for Region and Brand. A secondary Y-axis was used to make the target line clearly visible.
 Doctor Conversion Status: A table visual showing the final, most recent conversion status ("Converted" or "Not Converted") for each doctor.
 Brand Competition by Region: A 100% stacked column chart that clearly visualizes the market share of our products versus the total competitor volume in each region.
-Challenges & Key Learnings
-Data Cleaning: The initial data structure was the biggest challenge. The combination of unpivoting, splitting by multiple delimiters, and using conditional logic based on the Attribute column was key to success.
-DAX Context: Encountered and solved several classic DAX issues, including the "many-to-many" relationship error and the RELATED vs. LOOKUPVALUE context problem. This highlighted the importance of a clean data model.
-Iterative Development: The project required a highly iterative approach—building a visual, diagnosing an issue (like the flat target line), and going back to the data model or DAX to refine the solution.
-This project was an excellent exercise in end-to-end BI development and problem-solving.
