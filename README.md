@@ -1,80 +1,92 @@
-# RCPA Reporting & Doctor Performance Analysis (Power BI)
-## 🔍 Overview
+# RCPA Pharmaceutical Sales Analysis Project
 
-This project demonstrates a complete **ETL and Visualization pipeline** using **Power Query and Power BI**. It focuses on analyzing prescription data gathered from a **Retail Chemist Prescription Audit (RCPA)** to evaluate brand performance, doctor conversion rates, and competitor analysis.
+## Project Overview
 
-## 🗃️ Datasets Used
+This project involves a comprehensive analysis of Retail Chemist Prescription Audit (RCPA) data to provide actionable insights into doctor prescription performance, brand competition, and doctor conversion rates. The primary goal was to perform a complete end-to-end Power BI project, starting from raw, complex data and ending with a clean, interactive, and insightful dashboard.
 
-1. **RCPA Reporting Form**  
-2. **Product Master**  
-3. **Brand Targets**  
-4. **Expected Transformation Sheet**
+The project demonstrates key skills in:
+*   **Data Transformation (ETL)** using Power Query
+*   **Data Modeling** with a Star Schema in Power BI
+*   **Advanced DAX** for creating complex calculated columns and measures
+*   **Data Visualization** to build an interactive and user-friendly report
 
-Each dataset plays a critical role in transforming raw prescription data into actionable insights.
+---
 
-## ⚙️ ETL Process (Power Query)
+## Data Sources
 
-The following steps were implemented in **Power Query (within Power BI)**:
+The analysis is based on four primary data sets:
+1.  **RCPA Reporting Form:** The main transactional data containing prescription records in a wide, unpivoted format.
+2.  **Product Master:** A lookup table with detailed information about each product.
+3.  **Brand Targets:** A table defining the monthly prescription targets for each brand.
+4.  **Expected Transformation:** A guide document outlining the desired structure for the final clean data tables.
 
-### 1. RCPA Data Table
-- Imported and cleaned the RCPA Reporting Form.
-- Unpivoted brand columns into a normalized structure.
-- Merged with Product Master to enrich brand metadata.
-- Filtered to include only in-house brands.
+---
 
-### 2. Competitor RCPA Data Table
-- Reused the same source but filtered for competitor brands only.
-- Ensured format aligned with the Expected Transformation sheet.
+## ETL Process (Power Query)
 
-## 📈 Visualizations (Power BI)
+The raw data was significantly complex and required extensive cleaning and transformation in Power Query to prepare it for analysis. Key steps included:
 
-Three primary visuals were developed:
+1.  **Data Unpivoting:** The main RCPA data was unpivoted to transform it from a wide format to a tall, normalized format, making it suitable for analysis.
+2.  **Splitting and Parsing:** The unpivoted "Attribute" and "Value" columns were systematically split by delimiters (line feeds, commas, colons) to extract key information into separate, clean columns.
+3.  **Conditional Column Creation:** Conditional logic was used to create unified `Doctor Name` and `Chemist` columns from multiple source columns. This was a critical step to handle the structure where data for three different pharmacies was present in every row.
+4.  **Data Cleaning:** Applied a robust cleaning routine (**Trim, Clean, Uppercase**) to all key columns (`Product Name`, `Brand`, `Division`) to ensure data consistency and prevent relationship errors.
+5.  **Table Separation:** The cleaned data was separated into two primary fact tables as required:
+    *   `RCPA Data Table`: Containing only our company's product prescription data.
+    *   `Competitor RCPA Data Table`: Containing only competitor product prescription data.
+6.  **Aggregation:** The `BRAND TARGETS` table was grouped by brand to create a unique target value for each, preventing "many-to-many" relationship errors.
 
-1. **📊 Doctor Rx Performance**
-   - Tracks prescription quantity vs targets per brand, per Med Rep, per region.
-   - Data merged with Brand Targets.
+---
 
-2. **📈 Doctor Conversion Status**
-   - Evaluates if a doctor meets/exceeds target Rx quantities for **3 or more consecutive RCPAs**.
-   - Binary flag indicating conversion status per doctor.
+## Data Model
 
-3. **📉 Brand Competition per Region**
-   - Compares total prescriptions of our product vs competitors.
-   - Visualized by region to reveal market penetration.
+A robust **Star Schema** was implemented to ensure efficiency, accuracy, and ease of use for creating visuals.
 
-## 🧾 Key Definitions
+*   **Fact Tables:** `RCPA Data Table`, `Competitor RCPA Data Table`
+*   **Dimension Tables:** `Product Dimension`, `Brand Dimension`, `PRODUCT MASTER`, `BRAND TARGETS`, and a DAX-generated `Date Table`.
 
-| Term | Description |
-|------|-------------|
-| **Rx** | Prescription |
-| **Doctor Conversion** | A doctor who prescribes the target quantity in 3 or more consecutive audits |
-| **Brand Competition** | Market share comparison between our brand and competitors |
-| **RCPA** | Retail Chemist Prescription Audit |
+The model uses clean, one-to-many relationships, with filters flowing from the dimension tables to the fact tables. This design is optimal for performance and prevents ambiguity in calculations.
 
-## 💡 Tools & Technologies
+*(Optional: Insert an image of your data model here by uploading the screenshot to your GitHub repository and linking to it)*
+<!-- ![Data Model Diagram](Data_Model.png) -->
 
-- **Power BI Desktop**
-- **Power Query (M Language)**
-- **Excel (as source files)**
+---
 
-## 📂 Repository Structure
+## DAX Calculations
 
-```
-|-- 📁 datasets/
-|     |-- RCPA_Reporting_Form.xlsx
-|     |-- Product_Master.xlsx
-|     |-- Brand_Targets.xlsx
-|     |-- Expected_Transformation.xlsx
-|
-|-- 📁 powerbi/
-|     |-- RCPA_Report.pbix
-|
-|-- README.md
-```
+Several key DAX calculations were created to provide advanced insights:
 
-## ✅ How to Run
-
-1. Open `RCPA_Report.pbix` using Power BI Desktop.
-2. Refresh all queries to reload data and transformations.
-3. Navigate through the Report pages to explore visualizations.
-
+#### 1. Base Measures
+Simple `SUM` measures for basic aggregation.
+```dax
+Total Our Rx = SUM('RCPA Data Table'[Rx Qty/Week])
+Total Competitor Rx = SUM('Competitor RCPA Data Table'[Rx Qty/Week])
+Use code with caution.
+Markdown
+2. Doctor Specific Target (Measure)
+An advanced measure using AVERAGEX and LOOKUPVALUE to calculate the correct target for each doctor based on the specific mix of products they prescribed. This solved the "flat line" issue in the main performance chart.
+Generated dax
+Doctor Specific Target =
+AVERAGEX(
+    'RCPA Data Table',
+    LOOKUPVALUE(
+        'BRAND TARGETS'[Target],
+        'BRAND TARGETS'[Brand],
+        'RCPA Data Table'[Product Name]
+    )
+)
+Use code with caution.
+Dax
+3. Doctor Conversion Status (Calculated Column & Measure)
+This was the most complex calculation.
+A calculated column was first created to check, on a row-by-row basis, if an RCPA marked the 3rd consecutive time a doctor met their target.
+A final measure ([Final Conversion Status]) was then built to find the most recent status for each doctor, providing a clean and accurate summary for the final visual.
+Visualizations
+The final report consists of three main visuals designed to answer the key business questions:
+Doctor Rx Performance vs. Target: A line and clustered column chart showing each doctor's total prescriptions against their specific target, with slicers for Region and Brand. A secondary Y-axis was used to make the target line clearly visible.
+Doctor Conversion Status: A table visual showing the final, most recent conversion status ("Converted" or "Not Converted") for each doctor.
+Brand Competition by Region: A 100% stacked column chart that clearly visualizes the market share of our products versus the total competitor volume in each region.
+Challenges & Key Learnings
+Data Cleaning: The initial data structure was the biggest challenge. The combination of unpivoting, splitting by multiple delimiters, and using conditional logic based on the Attribute column was key to success.
+DAX Context: Encountered and solved several classic DAX issues, including the "many-to-many" relationship error and the RELATED vs. LOOKUPVALUE context problem. This highlighted the importance of a clean data model.
+Iterative Development: The project required a highly iterative approach—building a visual, diagnosing an issue (like the flat target line), and going back to the data model or DAX to refine the solution.
+This project was an excellent exercise in end-to-end BI development and problem-solving.
